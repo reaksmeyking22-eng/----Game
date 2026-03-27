@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Kla Klouk</title>
+
+<style>
+body {
+    font-family: Arial;
+    text-align: center;
+    background: #1e272e;
+    color: white;
+}
+
+h1 { margin: 10px; }
+
+#balance {
+    font-size: 20px;
+    margin: 10px;
+}
+
+#result {
+    margin: 10px;
+    font-size: 18px;
+}
+
+.choices img {
+    width: 80px;
+    margin: 8px;
+    border: 3px solid transparent;
+    border-radius: 10px;
+}
+
+.selected {
+    border: 3px solid yellow;
+}
+
+.dice img {
+    width: 80px;
+    margin: 10px;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    margin: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Kla Klouk 🎲</h1>
+
+<div id="balance">ប្រាក់: 1000$</div>
+<div id="result">ចាប់ផ្តើមលេង</div>
+
+<div class="choices" id="choices"></div>
+
+<button onclick="rollDice()">Roll</button>
+<button onclick="resetGame()">Reset</button>
+
+<div class="dice">
+    <img id="die1">
+    <img id="die2">
+    <img id="die3">
+</div>
+
+<script>
+// =========================
+// 💰 DATA (same as Python)
+let balance = 1000;
+let bets = {}; // {1:100, 3:200}
+
+// 🖼️ YOUR REAL IMAGE NAMES
+const images = [
+    "ក្តាម.jpg",
+    "ខ្លា.jpg",
+    "ឃ្លោក.jpg",
+    "ត្រី.jpg",
+    "បង្គង.jpg",
+    "មាន់.jpg"
+];
+
+// =========================
+// 🎯 CREATE BUTTONS
+const container = document.getElementById("choices");
+
+images.forEach((img, i) => {
+    let btn = document.createElement("img");
+    btn.src = img;
+
+    btn.onclick = () => selectChoice(i + 1, btn);
+
+    container.appendChild(btn);
+});
+
+// =========================
+// 💰 UPDATE BALANCE
+function updateBalance() {
+    document.getElementById("balance").innerText =
+        "ប្រាក់: " + balance + "$";
+}
+
+// =========================
+// 🎯 SELECT (MULTI BET like Python)
+function selectChoice(choice, btn) {
+    let betAmount = 100;
+
+    if (bets[choice]) {
+        bets[choice] += betAmount;
+    } else {
+        bets[choice] = betAmount;
+    }
+
+    btn.classList.add("selected");
+
+    document.getElementById("result").innerText =
+        "Bet: " + JSON.stringify(bets);
+}
+
+// =========================
+// 🎲 ROLL (SAME LOGIC AS PYTHON)
+function rollDice() {
+    if (Object.keys(bets).length === 0) {
+        result.innerText = "សូមជ្រើសរើសសត្វសិន!";
+        return;
+    }
+
+    let totalBet = Object.values(bets).reduce((a,b)=>a+b,0);
+
+    if (balance < totalBet) {
+        result.innerText = "លុយមិនគ្រប់!";
+        return;
+    }
+
+    // 🎲 roll
+    let d1 = rand();
+    let d2 = rand();
+    let d3 = rand();
+
+    showDice("die1", d1);
+    showDice("die2", d2);
+    showDice("die3", d3);
+
+    let results = [d1, d2, d3];
+
+    // 🎯 EXACT Python logic
+    let totalWin = 0;
+    let totalLoss = 0;
+
+    for (let choice in bets) {
+        let money = bets[choice];
+        let count = results.filter(x => x == choice).length;
+
+        if (count > 0) {
+            totalWin += money * count;
+        } else {
+            totalLoss += money;
+        }
+    }
+
+    // 💰 update balance
+    balance += totalWin;
+    balance -= totalLoss;
+
+    let net = totalWin - totalLoss;
+
+    if (net > 0) {
+        result.innerText = `ចំណេញ ${net}$ 🎉`;
+    } else if (net < 0) {
+        result.innerText = `ខាត ${-net}$ 😢`;
+    } else {
+        result.innerText = "ស្មើ 😐";
+    }
+
+    updateBalance();
+
+    // reset
+    bets = {};
+    clearSelection();
+}
+
+// =========================
+// 🎲 RANDOM
+function rand() {
+    return Math.floor(Math.random() * 6) + 1;
+}
+
+// =========================
+// 🖼️ SHOW DICE
+function showDice(id, num) {
+    document.getElementById(id).src = images[num - 1];
+}
+
+// =========================
+// 🔄 RESET UI
+function clearSelection() {
+    document.querySelectorAll(".choices img")
+        .forEach(img => img.classList.remove("selected"));
+}
+
+// =========================
+// 🔄 RESET GAME
+function resetGame() {
+    balance = 1000;
+    bets = {};
+    updateBalance();
+    result.innerText = "ចាប់ផ្តើមឡើងវិញ";
+    clearSelection();
+}
+</script>
+
+</body>
+</html>
